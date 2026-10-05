@@ -5,6 +5,7 @@ __pycache__/
 .coverage
 *.log
 data/raw/*/
+data/long/*/
 data/processed/*/
 data/processed_rejected/
 runs/*/
