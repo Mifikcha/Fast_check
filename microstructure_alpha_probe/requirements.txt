@@ -1,0 +1,12 @@
+numpy>=2.0,<3
+pandas>=2.2,<3
+pyarrow>=17,<24
+scipy>=1.13,<2
+scikit-learn>=1.5,<2
+lightgbm>=4.5,<5
+matplotlib>=3.9,<4
+seaborn>=0.13,<1
+PyYAML>=6,<7
+websockets>=14,<16
+pytest>=8,<10
+

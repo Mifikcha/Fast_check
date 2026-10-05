@@ -1,0 +1,13 @@
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+*.log
+data/raw/*/
+data/processed/*/
+data/processed_rejected/
+runs/*/
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+!runs/.gitkeep

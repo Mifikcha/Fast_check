@@ -1,0 +1,40 @@
+schema_version: 1
+source_run: 2026-09-12_070710_btcusdt
+source_decision_lock_sha256: f421d5d98b76b41b26985d9b601ff47d2f09b4f07e498ea4d919c9bfd2620184
+source_dataset_sha256: 6a44b0f1a61e8900f79930c9633968127ad8c7047c151f1722af4e4a10a0ffe3
+source_feature_list_sha256: c43bc2acebbe7158d8c63d46fbda147c2e2d45fd89d89b1be89e3a3209afdea7
+source_test_rank_ic: 0.18908063446392195
+source_test_pearson_ic: 0.14393864505369586
+source_test_data_quality: BAD
+model: ridge_a0.1
+alpha: 0.1
+horizon_s: 30
+preprocessing: median_imputer_keep_empty_then_standard_scaler
+signal_definition: future_log_mid_return
+threshold: 0.00005
+feature_source: source_decision_lock.features
+quantile_source: source_decision_lock.thresholds_and_quantiles.ridge_a0.1|30.quantile_edges
+training_source: source_run_development_before_validation_test_boundary_with_max_horizon_purge
+
+stage2:
+  horizons_s: [10, 30, 60, 120, 300, 900]
+  exclusion_before_s: 60
+  exclusion_after_s: 60
+  minimum_global_usable_pct: 95.0
+  minimum_complete_days: 7
+  minimum_daily_rows: 3600
+  cost_scenarios_bps: [0, 0.5, 1, 2, 5, 10]
+  selectivity_tail_percent: [50, 30, 20, 10, 5, 2, 1]
+  latency_ms: [0, 250, 500, 1000, 2000, 5000]
+  long_part_seconds: 900
+  long_part_rows: 100000
+  disk_reserve_gb: 3
+  scientific_verdict:
+    minimum_daily_mean_rank_ic: 0.01
+    minimum_positive_day_fraction: 0.70
+    minimum_positive_phase_fraction: 0.70
+    minimum_group_ic_lift: 0.0
+    strong_minimum_days: 10
+  trading_verdict:
+    confirmatory_cost_bps: 1.0
+    minimum_confirmatory_trades: 100

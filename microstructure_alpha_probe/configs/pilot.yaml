@@ -1,0 +1,147 @@
+project:
+  name: microstructure_alpha_probe
+  seed: 42
+  symbol: BTCUSDT
+  exchange: bybit
+  category: linear
+
+paths:
+  raw_dir: data/raw
+  processed_dir: data/processed
+  runs_dir: runs
+
+collection:
+  websocket_url: wss://stream.bybit.com/v5/public/linear
+  orderbook_depth: 50
+  topics:
+    - orderbook.50.BTCUSDT
+    - publicTrade.BTCUSDT
+    - tickers.BTCUSDT
+  heartbeat_interval_s: 20
+  stale_connection_s: 15
+  reconnect_initial_s: 1
+  reconnect_max_s: 30
+  flush_interval_s: 15
+  part_rows: 25000
+  part_seconds: 15
+  parquet_compression: zstd
+  strict_consecutive_update_ids: false
+  include_block_trades: true
+  include_rpi_trades: true
+
+sampling:
+  interval_s: 1
+  max_book_age_ms: 2000
+  tiny_spread: 1.0e-12
+
+features:
+  depth_levels: [1, 5, 10, 20]
+  trade_windows_s: [1, 5, 10, 30, 60]
+  ofi_windows_s: [1, 5, 10, 30]
+  return_lags_s: [1, 5, 10, 30, 60]
+  volatility_windows_s: [10, 30, 60]
+  important_features:
+    - microdev
+    - obi_1
+    - obi_5
+    - obi_10
+    - obi_20
+    - volume_imbalance_5s
+    - volume_imbalance_30s
+    - trade_count_imbalance_5s
+    - ofi_5s
+    - ofi_30s
+    - return_5s
+    - return_30s
+
+targets:
+  horizons_s: [10, 30, 60]
+  dead_zone_bps: 2.0
+  require_valid_path: true
+
+data_quality:
+  missing_interval_s: 2.0
+  stale_book_s: 2.0
+  min_book_usable_pct: 95.0
+  max_longest_gap_s: 10.0
+  max_malformed_messages: 0
+  max_negative_latency_pct: 1.0
+
+splits:
+  train_fraction: 0.60
+  validation_fraction: 0.20
+  test_fraction: 0.20
+  walk_forward_folds: 4
+  embargo_s: 60
+  purge_s: 60
+  leading_embargo: true
+  minimum_fold_train_rows: 120
+
+models:
+  primary_regression_model: ridge
+  primary_horizon_s: 30
+  ridge_alphas: [0.1, 1.0, 10.0]
+  logistic_c: [0.1, 1.0]
+  lightgbm_grid:
+    - n_estimators: 150
+      learning_rate: 0.05
+      num_leaves: 15
+      max_depth: 5
+      min_child_samples: 50
+    - n_estimators: 250
+      learning_rate: 0.03
+      num_leaves: 31
+      max_depth: 6
+      min_child_samples: 50
+  lightgbm_n_jobs: -1
+  permutation_repeats: 5
+
+statistics:
+  autocorrelation_lags_s: [1, 5, 10, 30, 60]
+  minimum_group_n: 30
+  max_mutual_information_rows: 50000
+  fdr_alpha: 0.05
+  hac_min_lag_equals_horizon: true
+  rolling_ic_window_s: 900
+
+bootstrap:
+  n_resamples: 1000
+  confidence: 0.95
+  block_multipliers: [1, 2, 5]
+
+quantiles:
+  bins: 10
+  minimum_bucket_n: 10
+
+trading:
+  threshold_grid_bps: [0.0, 0.5, 1.0, 2.0, 5.0]
+  selection_incremental_cost_bps: 5.0
+  incremental_round_trip_cost_bps: [0.0, 2.0, 5.0, 10.0, 15.0]
+  minimum_validation_trades: 10
+  non_overlapping: true
+  execution_latency_ms: 0
+
+regimes:
+  volatility_feature: realized_vol_60s
+  quantiles: [0.333333, 0.666667]
+  spread_quantiles: [0.333333, 0.666667]
+
+robustness:
+  extreme_abs_target_quantile: 0.99
+  compare_halves: true
+
+verdict:
+  minimum_research_hours: 12.0
+  minimum_final_test_rows: 1000
+  minimum_primary_test_ic: 0.01
+  minimum_fold_same_sign_fraction: 0.60
+  minimum_quantile_rank_correlation: 0.60
+  maximum_top_10pct_pnl_fraction: 0.80
+  maximum_best_hour_pnl_fraction: 0.80
+  minimum_microstructure_ic_lift: 0.002
+  confirmatory_incremental_cost_bps: 5.0
+  require_positive_ic_ci_lower_for_go: true
+
+plots:
+  dpi: 140
+  style: whitegrid
