@@ -1,0 +1,6 @@
+data/raw/
+data/clean/
+__pycache__/
+*.log.part
+data/work/
+.pytest_cache/
