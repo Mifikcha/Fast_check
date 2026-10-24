@@ -1,0 +1,4 @@
+config: stageF2_frozen.yaml
+file_sha256: 46de66bfaab635f66b7cb53bd3b21fa64ad6cf09b37d0d90789a3f071eb40cb2
+section_sha256: 1580bd1f37cd2e0cf2da1460457fbb56d3673dd0bce2e4b29904c83025f5b0d3
+frozen_utc: 2026-10-24T11:06:03+00:00

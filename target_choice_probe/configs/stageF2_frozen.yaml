@@ -1,0 +1,103 @@
+# Stage F2 — what to predict: comparing forecast targets in an automated signal search.
+# Frozen before any download or result. Hash of the parsed section -> logs/frozen_hash_F2.txt.
+# Any change after results = a new file version (stageF2_frozen_v2.yaml) and a note in the reports.
+stageF2:
+  exchange: bybit
+  universe:
+    # snapshot copy of microstructure_alpha_probe/runs/screening/20261015T140624Z/universe.csv (Stage 4, read only)
+    stage4_universe_csv: data/universe_stage4.csv
+    stage4_universe_sha256: f80d6867a75ad8adddce7196dcf333a7c2fe4809868a720d5a57984f1448862c
+    stage4_spread_csv: data/spread_depth_stage4.csv      # L1 spread records, used only to compare with slip 1 bp
+  period:
+    data_start_utc: "2021-10-01T00:00:00Z"     # download start (3 months of warm-up for 180-bar windows)
+    analysis_start_utc: "2022-01-01T00:00:00Z" # first bar used in any statistic
+    data_end_utc: "2026-10-24T00:00:00Z"       # exclusive, same as F1
+    holdout_days: 180                          # 90 if < 24 months of data (then "low power")
+    holdout_days_short: 90
+    min_months_for_long_holdout: 24
+    embargo_days: 3
+  api:
+    rest_base: https://api.bybit.com
+    max_requests_per_s: 12        # docs: 600 req / 5 s per IP; F1 may run in parallel at 18/s
+    threads: 8
+    timeout_s: 20
+    max_retries: 8
+    backoff_initial_s: 1.0
+    backoff_max_s: 60.0
+    kline_limit: 1000             # docs: 1..1000
+    oi_limit: 200                 # docs: 1..200
+    funding_limit: 200            # docs: 1..200
+  bar_hours: 4                    # decision bar, UTC boundaries
+  horizons_bars: [1, 6, 18]       # 4 h, 1 day, 3 days
+  data_requirement_C1: {min_months: 24, min_mean_assets_per_bar: 40}
+
+  targets:
+    sigma_window_bars: 180        # sigma_hat: std of 4h returns over the last 180 bars, known at t
+    round_trip_cost: 0.0013       # c for T8: 2 x (5.5 + 1) bp
+    branch_X: [T1, T3, T4, T5, T6]
+    branch_D: [T1, T2, T5, T8]
+    vol_target: T7
+
+  features:
+    max_features: 2000
+    windows: [3, 6, 12, 18, 42, 90, 180]
+    min_window: {ts_std: 6, ts_zscore: 6, ts_skew: 12, ts_corr: 6}   # shorter windows are degenerate
+    # stationary base series: every op below with every window
+    stationary_series: [ret, range, clv, funding, premium, oi_chg]
+    stationary_ops: [ts_mean, ts_std, ts_zscore, ts_rank, ts_min, ts_max, ts_skew, decay_linear]
+    # level series (logs): differences / position in window only
+    level_series: [log_close, log_open, log_high, log_low, log_turnover, log_volume, log_oi]
+    level_ops: [delta, ts_zscore, ts_rank]
+    delay_series: [ret]                          # delay(ret, w) for w in windows
+    pct_change_series: [turnover, oi]            # pct_change(x, w) on the raw series
+    ts_corr_pairs: [[ret, log_turnover_d1], [ret, oi_chg], [ret, funding], [ret, premium], [range, log_turnover_d1], [abs_ret, oi_chg]]
+    cs_variants: [cs_zscore, cs_rank]            # applied to every time-series result, then cs_zscore before the model
+    a101: true                                   # optional family, <= 40 formulas, source tagged in metadata
+    dedupe_abs_corr: 0.98                        # target-free, greedy in grammar order, on dev bars only
+    dedupe_sample_every_bars: 3
+    pca_variance: 0.95
+
+  walkforward:
+    first_train_months: 12        # expanding window
+    test_block: month
+    purge_bars: h                 # train rows need t + 1 + h <= first test bar
+    bh_q: 0.05                    # Benjamini-Hochberg inside each (target, h) family, real + placebo together
+    top_k: 20
+    nw_lag: h                     # Newey-West lag for branch X
+    bootstrap_reps_selection: 200 # branch D: block bootstrap, blocks of h bars
+    alpha_grid: [1, 10, 100, 1000]
+    alpha_validation_months: 3
+    naive_abs_t: 2.0
+  models: {ridge: [T1, T3, T4, T5, T6, T7], logistic: [T2], multinomial: [T8]}
+  portfolio:
+    X: {quantile: 0.2, weights: equal, rebalance_every: h}
+    D: {theta_grid: [0.0, 0.5, 1.0], theta_select: dev_oos_sharpe_S1, rebalance_every: h}
+    gross: 1.0                    # returns per unit of gross exposure, no leverage assumption
+  placebo:
+    share_of_real: 0.20           # half type 1, half type 2, fresh draw on every refit (seed = refit index)
+    type1_min_shift_days: 60      # circular time shift inside each asset
+    type2_phi: [0.5, 0.9, 0.98]
+
+  costs_bp_per_side:              # applied to |delta weight| at every change of position
+    S0: {entry: 0.0, exit: 0.0, slip: 0.0}
+    S1: {entry: 5.5, exit: 5.5, slip: 1.0}     # main: taker + 1 bp
+    S2: {entry: 2.0, exit: 5.5, slip: 0.5}     # optimistic, maker fills not simulated
+  decision_scenario: S1
+  funding_in_pnl: true            # settled rate x position notional (notional ~ weight), shown with and without
+
+  volatility:
+    har_windows_bars: [6, 42, 180]
+    multiplier_clip: [0.5, 2.0]
+    target_vol: cross_sectional_median_forecast
+  comparison:
+    bootstrap_block_days: 7
+    bootstrap_reps: 2000
+    ci_level: 0.90
+    holm: true
+  decision:
+    P1: {sharpe_gt: 0.0, holdout_same_sign: true}
+    P2: {min_ccr: 1.2}
+    P3: {max_placebo_fdr: 0.10}
+    P4: {max_no_find_share: 0.50}
+    vol_regulator: {ci_lower_gt: 0.0, or_mdd_reduction: 0.20, max_return_loss: 0.10}
+  seed: 20261024
