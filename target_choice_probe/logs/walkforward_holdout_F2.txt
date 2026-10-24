@@ -1,0 +1,8 @@
+2026-10-24T13:20:53+00:00 47 blocks, 890 real features, until bar 11094
+2026-10-24T13:24:28+00:00 holdout_2026-04-27 done in 215s; pass X/T1/h6=727 D/T1/h6=543 placebo X/T1/h6=50
+2026-10-24T13:28:03+00:00 holdout_2026-05-01 done in 215s; pass X/T1/h6=728 D/T1/h6=548 placebo X/T1/h6=50
+2026-10-24T13:31:49+00:00 holdout_2026-06-01 done in 226s; pass X/T1/h6=715 D/T1/h6=492 placebo X/T1/h6=47
+2026-10-24T13:35:20+00:00 holdout_2026-07-01 done in 211s; pass X/T1/h6=717 D/T1/h6=490 placebo X/T1/h6=48
+2026-10-24T13:39:07+00:00 holdout_2026-08-01 done in 227s; pass X/T1/h6=721 D/T1/h6=512 placebo X/T1/h6=43
+2026-10-24T13:42:55+00:00 holdout_2026-09-01 done in 228s; pass X/T1/h6=726 D/T1/h6=515 placebo X/T1/h6=60
+2026-10-24T13:46:50+00:00 holdout_2026-10-01 done in 235s; pass X/T1/h6=716 D/T1/h6=527 placebo X/T1/h6=42

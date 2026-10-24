@@ -518,6 +518,12 @@ T4 = ранг T1), поэтому ранговые IC признаков с ни
         useful.append({"branch": r.branch, "strategy": f"{r.target} h{r.h}", "mdd_reduction": mdd_red, "return_loss": loss, "useful": ok})
     U = pd.DataFrame(useful)
     vol_verdict = "ПОЛЕЗНА КАК РЕГУЛЯТОР" if U["useful"].any() else "НЕ ПОКАЗАЛА ПОЛЬЗЫ КАК РЕГУЛЯТОР"
+    rh = Rg[Rg.period == "holdout"]
+    if len(rh):     # the frozen rule is judged on dev; the holdout check is reported next to it, not hidden
+        vol_verdict += (" по правилу на разработке (" + ", ".join(f"{r.branch}:{r.strategy}" for r in U[U.useful].itertuples()) + ")"
+                        if U["useful"].any() else "")
+        vol_verdict += "; на контроле разность Шарпа «с регулятором − без»: " + ", ".join(
+            f"{r.branch} {r.diff:+.2f} (90% ДИ {r.lo:+.2f} … {r.hi:+.2f})" for r in rh.itertuples())
     (REPORTS / "volatility_target.md").write_text(f"""# Волатильность (T7) как цель и как регулятор размера позиции
 
 T7 = ln RV, RV — сумма квадратов часовых лог-доходностей на окне от открытия бара t+1 до открытия бара t+1+h.
