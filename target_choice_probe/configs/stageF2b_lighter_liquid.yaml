@@ -1,0 +1,16 @@
+# F2b on liquid Lighter markets: one new attempt, frozen before any computation (2026-11-02).
+stageF2b_lighter_liquid:
+  universe:
+    source: reports/lighter_tardis_cost_by_symbol.csv   # Tardis free samples, rebalance hours, 7 days
+    rule: imp10k_bp <= 2.0                               # Lighter taker $10k, worse side, incl. half spread
+  strategies: [X:T1, D:T5]                               # F2b Q4 objects, F2 forecasts not re-fitted
+  variants:
+    raw_h1: no band, not beta-neutral
+    q4_frozen: beta-neutral, band 1.0 x median |dw| (recomputed on this universe, dev), lam 0.25
+  returns: Bybit mark open-to-open, Bybit funding
+  costs: per asset per side = Lighter imp10k_bp of that asset; Bybit S1 (6.5 bp) shown for reference
+  bootstrap: {block_days: 7, reps: 2000, ci_level: 0.90}
+  verdict:
+    candidate: "dev net Sharpe (Lighter costs) > 0 and its 90% CI lower bound > 0 and holdout net Sharpe > 0"
+    otherwise: NO-GO
+  note: holdout already opened in F2; dev decides, holdout confirms sign only

@@ -9,3 +9,4 @@ utc,question,what,n_tests,period,note
 2026-10-24T15:43:42+00:00,Q5,timing hint D=2,3,dev,theta=1.0
 2026-10-24T15:44:06+00:00,Q4,no-trade band X:T1,12,dev,"selected b=1.0xmed, lam=0.25 before holdout"
 2026-10-24T15:44:08+00:00,Q4,no-trade band D:T5,12,dev,"selected b=1.0xmed, lam=0.25 before holdout"
+2026-11-02T03:55:31+00:00,Lighter-liquid,"X:T1, D:T5 on Lighter markets with imp10k<=2bp",4,dev+holdout,NO-GO
