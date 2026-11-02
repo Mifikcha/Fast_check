@@ -1,0 +1,12 @@
+utc,question,what,n_tests,period,note
+2026-10-24T14:24:09+00:00,Q3,"beta regression + beta-neutral rescaling, all F2 strategies",1,dev+holdout,после бета-нейтрализации у части стратегий h = 6/18 валовая альфа > 0 (см. таблицу)
+2026-10-24T15:13:26+00:00,Q2,"re-score F2 features + placebo types 1-4, regimes a-d, NW lags h/2h/4h",4,dev,40 refits; no model fitting
+2026-10-24T15:42:27+00:00,Q1,"PM: features+targets on mark OHLC, F2 walk-forward re-fitted",3,dev+holdout,"X:T1, X:T5, D:T1 at h=1; F2 seeds, BH, K, alpha grid"
+2026-10-24T15:43:07+00:00,Q1,P vs M vs PM at h=1,21,dev+holdout,overall: сигнал настоящий
+2026-10-24T15:43:23+00:00,Q4,no-trade band X:T1,12,dev,"selected b=1.0xmed, lam=0.25 before holdout"
+2026-10-24T15:43:24+00:00,Q4,no-trade band D:T5,12,dev,"selected b=1.0xmed, lam=0.25 before holdout"
+2026-10-24T15:43:42+00:00,Q5,timing hint D=1,3,dev,theta=0.0
+2026-10-24T15:43:42+00:00,Q5,timing hint D=2,3,dev,theta=1.0
+2026-10-24T15:44:06+00:00,Q4,no-trade band X:T1,12,dev,"selected b=1.0xmed, lam=0.25 before holdout"
+2026-10-24T15:44:08+00:00,Q4,no-trade band D:T5,12,dev,"selected b=1.0xmed, lam=0.25 before holdout"
+2026-11-02T03:55:31+00:00,Lighter-liquid,"X:T1, D:T5 on Lighter markets with imp10k<=2bp",4,dev+holdout,NO-GO

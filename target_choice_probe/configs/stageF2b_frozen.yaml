@@ -1,0 +1,63 @@
+# Stage F2b — closing checks of branch F2 ("what to predict").
+# Frozen before any F2b calculation. Hash of the parsed section -> logs/frozen_hash_F2b.txt.
+# F2 config, code and results are read only; data, periods, embargo and the (already opened) holdout are those of F2.
+stageF2b:
+  f2_config: configs/stageF2_frozen.yaml
+  holdout_note: "holdout was opened in F2: F2b holdout numbers confirm sign and order of magnitude only"
+  mark:
+    series: mark                      # /v5/market/mark-price-kline, interval 60, same 80 symbols, same range as F2
+    compare_on_common_coverage: true  # bars/assets without mark data are dropped from both P and M
+  bootstrap: {block_days: 7, reps: 2000, ci_level: 0.90}
+  cost_side_bp_S1: 6.5                # 5.5 taker + 1 slip
+
+  q1:
+    horizon: 1
+    strategies: all_h1                # every F2 h=1 strategy (X: T1,T3,T4,T5,T6; D: T1,T2,T5,T8 with F2 theta)
+    pm_retrain: [[X, T1], [X, T5], [D, T1]]   # features on mark OHLC (volume/turnover/OI/funding/premium unchanged), mark targets
+    liquidity_terciles: dev_mean_turnover      # asset terciles by mean 4h turnover on dev bars
+    rule:
+      artifact: {ept_m_over_p_max: 0.50, or_sharpe_m_ci_lo_max: 0.0}
+      real: {ept_m_over_p_min: 0.80, sharpe_m_ci_lo_min: 0.0}
+
+  q2:
+    placebo_share_of_real: 0.20       # total per refit, split equally between types 1, 2, 3, 4 (same total as F2)
+    types: [1, 2, 3, 4]               # 1 time shift (F2, demo only), 2 AR(1) (F2), 3 per-bar permutation across assets, 4 permutation per 30-day block
+    type4_block_days: 30
+    fdr_types: [3, 4]                 # types counted in the final FDR
+    regimes: [bh_top20, top20_only, bh_only, naive_t2]
+    nw_lag_multipliers: [1, 2, 4]     # calibration on type 2 with phi = 0.98, branch X; nominal two-sided share 4.6% (|t| > 2)
+    seed_offset: 1000
+    rule: {max_fdr_selected: 0.10, max_bh_pass_types34: 0.05}
+
+  q3:
+    regression: daily_net_S1_funding_on_ew_market   # EW market = mean mark open-to-open return of live assets
+    beta_window_bars: 180             # asset beta to EW market on bars <= t-1 (known at t)
+    beta_min_bars: 90
+    neutralise: scale_long_and_short  # a*long + c*short with portfolio beta 0 and sum|w| = 1; if no solution with a, c > 0: unchanged
+
+  q4:
+    run_if_q1_not: artifact
+    objects: top2_h1_by_dev_gross_sharpe_M_beta_neutral
+    band_mult: [0.0, 0.25, 0.5, 1.0]  # x median |delta w| (non-zero changes, dev) of the strategy
+    lam: [0.25, 0.5, 1.0]
+    select: dev_net_sharpe_S1
+    rule: {min_ept_bp: 6.5, net_sharpe_S1_ci_lo_gt: 0.0, holdout_net_sharpe_S1_gt: 0.0}
+
+  q5:
+    trade_prob_per_bar: 0.16666666666666666
+    max_delay_bars: [1, 2]
+    theta_grid: [0.0, 0.5, 1.0]       # z units of the D-branch forecast, chosen on dev per max delay
+    hint_strategy: best_D_h1_by_dev_gross_sharpe_M
+    seed: 20261025
+    random_hint_seed: 20261026
+    rule: {savings_ci_lo_gt: 0.0, random_ci_contains_zero: true}
+
+  corrections:
+    funding_mark_strategies: [[X, T1, 1], [X, T5, 1], [D, T1, 1]]
+    holm_drop_identical: [[X, T3, 6], [X, T3, 18]]
+
+  verdict:
+    close: "q4 == close or q4 skipped"
+    close_keep_timing: "q4 == close and q5 == useful"
+    one_more: "q4 == continue"
+  seed: 20261025

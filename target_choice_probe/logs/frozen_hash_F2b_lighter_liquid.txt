@@ -1,0 +1,3 @@
+config: stageF2b_lighter_liquid.yaml
+file_sha256: bc4dbdbc126a01bcf1a61959ef8d279fa596b68e9f0e7780545343763f457780
+frozen_utc: 2026-11-02T03:55:01Z

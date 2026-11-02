@@ -1,0 +1,2 @@
+2026-10-24T14:18:22+00:00 mark download finished: 80 symbols, failed=0, requests=3600
+mark panels: common/last bars = 1.0000; symbols with <99% coverage: []
