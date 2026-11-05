@@ -1,0 +1,8 @@
+data/
+__pycache__/
+.pytest_cache/
+logs/recorder.log
+logs/heartbeat.txt
+logs/gaps.csv
+logs/clock.csv
+logs/STOPPED_DISK

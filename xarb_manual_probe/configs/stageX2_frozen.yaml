@@ -1,0 +1,98 @@
+# Stage X2A — frozen before the first paper trade. Any change: run_x2.py freeze --reason "..." (new version, logged in logs/attempts.csv).
+stageX2:
+  recording:
+    quote_s: 15
+    book_s: 10
+    book_usd: 10000           # book depth kept per side
+    book_workers: 4           # parallel book requests per venue, inside book_rps
+    funding_s: 300
+    flush_s: 600
+    disk_reserve_gb: 25       # the recorder stops itself below this, see reports/X2_data_plan.md
+    quote_stale_s: 60         # a quote older than this is no quote
+    exchange_stale_s: 600     # exchange timestamp this old: dead market
+    unit_check: 0.02          # median pair gap over the last 24 hourly samples; beyond it: another token or contract unit
+    cand_on_bp: 30            # theta_cand: s_in at best prices
+    cand_off_bp: 10
+    cand_off_s: 1800          # below cand_off_bp this long ends the episode
+    usdc_leg: [okx, spot, USDC-USDT]
+    # requests per second for order books; published limits, kept with a margin (reports/X2_doc_check.md)
+    book_rps: {okx: 8, bybit: 20, bingx: 5, hyperliquid: 8, aster: 5, whitebit: 10, bitfinex: 1, blofin: 5, xt: 5, paradex: 10, lighter: 0.7, bitunix: 5, pionex: 3}
+
+  # taker fee, bp, conservative value of reports/X2_doc_check.md; taker on all four trades of a round trip
+  fees_bp:
+    okx: {perp: 5, spot: 10}
+    bybit: {perp: 5.5, spot: 10}
+    bingx: {perp: 5, spot: 10}
+    hyperliquid: {perp: 4.5}
+    aster: {perp: 4, spot: 10}
+    whitebit: {perp: 5.5, spot: 10}
+    bitfinex: {perp: 0, spot: 0}
+    blofin: {perp: 6}
+    xt: {perp: 6, spot: 20}
+    paradex: {perp: 3}
+    lighter: {perp: 0, spot: 0}
+    bitunix: {perp: 6}
+    pionex: {perp: 5, spot: 5}
+
+  categories:
+    dex: [hyperliquid, aster, paradex, lighter]
+    low_turnover_usd: 1000000
+    new_listing_days: 14
+    syn_regex: "[A-Z]+[0-9]+IX"          # GERMANY40IX and the like
+    # asset, or asset + X (tokenized stock: AAPLX). Blofin non-crypto classes plus Lighter, Bitfinex, Pionex catalogs of 2026-11-06.
+    syn_assets: [AAOI, AAPL, ABBV, ADBE, ADI, ALAB, AMAT, AMD, AMGN, AMZN, ANTHROPIC, APLD, APP, ARM, ASML, ASTS, AUDUSD, AVGO, AXTI, BABA, BE, BMNR, BOTZ, BRENTOIL,
+      BRKB, BSP, BX, BYD, BZ, CBRS, CGNX, CL, COHR, COIN, COST, CRCL, CRDO, CRWD, CRWV, CSOPSAMSUNG2L, CSOPSKHYNIX2L, CVNA, CXMT, CYPH, DELL, DIA, DKNG, DRAM, EURUSD, EWJ, EWY,
+      GBPUSD, GEV, GLW, GME, GOOGL, GS, HANMI, HIMS, HOOD, HUT, HYUNDAI, HYUNDAIUSD, IBM, INTC, IONQ, IREN, IWM, JPM, KIOXIA, KLAC, KO, KORU, KRCOMP, LITE, LLY, LRCX, MAGS,
+      MCD, META, MINIMAX, MRK, MRNA, MRVL, MSFT, MSTR, MSTU, MU, NATGAS, NBIS, NFLX, NG, NKE, NOK, NOW, NVDA, NZDUSD, OKLO, OPENAI, ORCL, PATH, PAXG, PLTR, POPMART, QCOM,
+      QNTX, QQQ, RAM, RDDT, RKLB, SAMSUNG, SAMSUNGUSD, SHEIN, SKHY, SKHYNIX, SKHYNIXUSD, SMCI, SMH, SMIC, SNDK, SNOW, SNPS, SNXX, SOXL, SOXS, SOXX, SPACEX, SPCX, SPY, SQQQ,
+      STXX, TEAM, TENCENT, TLT, TMF, TQQQ, TSLA, TSM, TTWO, TUR30, TWLO, TWST, UNH, UNITREE, URA, URNM, US100, US10Y, US500, USDCAD, USDCHF, USDHKD, USDJPY, USDKRW, UVXY, VST,
+      WDC, WHEAT, WTI, WTIOIL, XAG, XAU, XAUT, XCU, XIAOMI, XLE, XOM, XPD, XPT, ZHIPU]
+
+  paper:
+    q_usd: [1000, 5000]       # size per leg
+    main_q_usd: 1000          # $5000 leg at L=2 takes all of C=$5000; the verdict cell is Q=$1000
+    thetas_bp: [20, 50, 100]
+    delays_s: [30, 60, 120]
+    main_delay_s: 60          # set in advance, never chosen by result
+    robot_delay_s: 0          # reference
+    second_leg_s: 20
+    first_leg: long           # owner's legs go one after the other; the long is first by convention
+    exits:                    # E1 fixed tau or E2: the pair's own median of s_out over 24 h before entry
+      - {name: E1_0, tau_bp: 0}
+      - {name: E1_10, tau_bp: 10}
+      - {name: E2, median_h: 24, min_history_h: 12}
+    t_max_h: [24, 72]
+    stop_bp: 300              # the gap grew against the position by this much from entry
+    leverage: 2
+    leverage_ref: 3
+    max_positions: 3
+    hours_msk: [10, 25]       # 10:00-01:00 MSK, owner's default
+    hours_apply_to_exits: true  # nobody closes a trade asleep: an exit fired off-hours waits; liquidation does not
+    book_stale_s: 30          # a book older than this is not executable
+    quote_stale_s: 3700       # quotes are written on change plus hourly
+    capital_usd: [1000, 5000, 20000]
+    main_capital_usd: 5000
+    transfer_usd: 1           # per transfer, not confirmed (X1, F3)
+    transfer_delay_s: 1800
+    alternative_apr: 0.05
+    min_dev_trades: 10        # a variant needs this many dev trades to be chosen
+    owner_venues: null        # null until the owner answers: same as all venues
+    top_n_screener: 5         # emulated screener rank: by best-price spread among open candidates, BFS has no export
+
+  samples:
+    dev_days: 7
+    min_days: 14
+    max_gap_share: 0.10
+
+  criteria:
+    a1_min_days: 14
+    a1_max_gap_share: 0.10
+    a1_min_venues: 6
+    a2_min_apr: 0.15
+    a3_ci: 0.90
+    a3_min_trades: 30
+    a4_max_liquidations: 0
+    a4_worst_trade_of_capital: -0.03
+    category_min_trades: 15
+    bootstrap_n: 5000
+    bootstrap_seed: 20261106
