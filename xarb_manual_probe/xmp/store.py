@@ -20,7 +20,8 @@ def days_recorded():
 
 def segments(cfg, days=None):
     """First full days are the development sample, the rest control. The first calendar day is partial and is left out."""
-    days = days_recorded() if days is None else days
+    today = dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%d")
+    days = [d for d in (days_recorded() if days is None else days) if d < today]  # today is still being written
     full = days[1:]
     n = cfg["samples"]["dev_days"]
     return full[:n], full[n:]
