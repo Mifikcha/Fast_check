@@ -315,7 +315,7 @@ def test_config_is_complete():
 
 
 def test_segments_skip_first_and_current_day():
-    days = [f"2026-11-{d:02d}" for d in range(5, 21)] + ["2099-01-01"]
+    days = [f"2020-11-{d:02d}" for d in range(5, 21)] + ["2099-01-01"]
     dev, ctl = evaluate.store.segments(common.load_config(), days)
     assert dev == days[1:8]
     assert ctl == days[8:16]  # the partial first day and the day still running stay out
